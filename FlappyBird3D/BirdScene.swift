@@ -9,10 +9,38 @@ import SceneKit
 
 class BirdScene: SCNScene {
     
+    let emptyGrass1 = SCNNode()
+    let emptyGrass2 = SCNNode()
+
+    var runningUpdate = true
+    var timeLast: Double?
+    let speedConstant = -0.7
+    
     convenience init(create: Bool) {
         self.init()
         setupCamera()
         setupScenery()
+        let propsScene = SCNScene(named: "Props.scn")!
+
+        emptyGrass1.scale = SCNVector3(easyScale: 0.15)
+        emptyGrass1.position = SCNVector3(0, -1.3, 0)
+        
+        emptyGrass2.scale = SCNVector3(easyScale: 0.15)
+        emptyGrass2.position = SCNVector3(4.45, -1.3, 0)
+        
+        
+        let grass1 = propsScene.rootNode.childNode(withName: "Ground", recursively: true)!
+        grass1.position = SCNVector3(-5, 0, 0)
+        
+        let graas2 = grass1.clone()
+        graas2.position = SCNVector3(-5,0,0)
+        
+        emptyGrass1.addChildNode(grass1)
+        emptyGrass2.addChildNode(graas2)
+ 
+        rootNode.addChildNode(emptyGrass1)
+        rootNode.addChildNode(emptyGrass2)
+
         
     }
     
@@ -74,4 +102,36 @@ class BirdScene: SCNScene {
     
     
 }
-
+// MARK: - extension SCNSceneRendererDelegate
+extension BirdScene: SCNSceneRendererDelegate {
+    func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
+        let dt: Double
+        if runningUpdate {
+            if let lt = timeLast {
+                dt = time - lt
+            } else {
+                dt = 0
+            }
+        } else {
+            dt = 0
+        }
+        timeLast = time
+        moveGrass(node: emptyGrass1, dt: dt)
+        moveGrass(node: emptyGrass2, dt: dt)
+    }
+    
+    func moveGrass(node: SCNNode, dt: Double) {
+        node.position.x += Float(dt*speedConstant)
+        if node.position.x <= -4.45 {
+            node.position.x = 4.45
+        }
+    }
+}
+extension SCNVector3 {
+    init(easyScale: Float) {
+        self.init()
+        self.x = easyScale
+        self.y = easyScale
+        self.z = easyScale
+    }
+}
